@@ -12,6 +12,9 @@ import { randomUUID } from "bullmq/dist/esm/utils";
 
 import { connectDatabase } from "./config/database";
 import { agentRoutes } from "./routes/agent.routes";
+import { connectQdrant } from "./config/qdrant";
+import { memoryRoutes } from "./routes/memory.routes";
+import multipart from "@fastify/multipart";
 
 dotenv.config();
 
@@ -92,9 +95,14 @@ app.get("/health", async () => ({
 
 async function startServer() {
   await connectDatabase();
-
+  await connectQdrant();
+  
   // Register Fastify routes here.
+  await app.register(multipart, { limits: { fileSize: 2 * 1024 * 1024 } });
   await app.register(agentRoutes);
+  await app.register(memoryRoutes);
+
+  
   const webRoot = fileURLToPath(new URL("../public/", import.meta.url));
   if (existsSync(webRoot)) {
     await app.register(fastifyStatic, { root: webRoot });

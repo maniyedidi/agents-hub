@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
-const AVAILABLE_TOOLS = ["list_files", "read_file", "write_file"];
+const AVAILABLE_TOOLS = ["list_files", "read_file", "write_file", "search_memory"];
 const AVAILABLE_IMAGES = ["node:22-alpine", "python:3.12-slim"];
 
 const emptyAgent = () => ({

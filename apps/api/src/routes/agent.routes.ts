@@ -6,7 +6,8 @@ import { AgentModel } from "../models/agent.model";
 const ALLOWED_TOOLS = [
   "list_files",
   "read_file",
-  "write_file"
+  "write_file",
+  "search_memory"
 ];
 
 const ALLOWED_IMAGES = [
