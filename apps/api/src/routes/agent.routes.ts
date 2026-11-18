@@ -2,6 +2,7 @@
 import { FastifyInstance } from "fastify";
 import mongoose from "mongoose";
 import { AgentModel } from "../models/agent.model";
+import { chatWithAgent } from "../agent";
 
 const ALLOWED_TOOLS = [
   "list_files",
@@ -16,6 +17,55 @@ const ALLOWED_IMAGES = [
 ];
 
 export async function agentRoutes(app: FastifyInstance) {
+
+  app.post("/api/agents/:id/chat", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as {
+      message?: string;
+      history?: { role: "user" | "assistant"; content: string }[];
+    };
+
+    if (!mongoose.isValidObjectId(id)) {
+      return reply.code(400).send({ error: "Invalid agent ID" });
+    }
+
+    if (typeof body?.message !== "string" || !body.message.trim()) {
+      return reply.code(400).send({ error: "Message is required" });
+    }
+
+    if (
+      body.history !== undefined &&
+      (!Array.isArray(body.history) ||
+        body.history.length > 20 ||
+        !body.history.every(item =>
+          item !== null &&
+          typeof item === "object" &&
+          (item.role === "user" || item.role === "assistant") &&
+          typeof item.content === "string"
+        ))
+    ) {
+      return reply.code(400).send({ error: "Invalid chat history" });
+    }
+
+    const agent = await AgentModel.findById(id).lean();
+    if (!agent) {
+      return reply.code(404).send({ error: "Agent not found" });
+    }
+
+    try {
+      const response = await chatWithAgent(
+        agent,
+        body.message.trim(),
+        body.history
+      );
+      return { reply: response };
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error: error instanceof Error ? error.message : "Chat request failed"
+      });
+    }
+  });
 
   // Create Agent
   app.post("/api/agents", async (request, reply) => {

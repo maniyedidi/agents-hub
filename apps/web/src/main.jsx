@@ -213,6 +213,210 @@ function AgentForm({ agent, onClose, onSave }) {
   );
 }
 
+function MemoryModal({ agent, onClose }) {
+  const [uploads, setUploads] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState("");
+
+  async function uploadFiles(fileList) {
+    const files = Array.from(fileList);
+    if (files.length === 0) return;
+    setBusy(true);
+    setError("");
+
+    for (const file of files) {
+      const entry = { name: file.name };
+      if (!/\.(txt|md)$/i.test(file.name)) {
+        entry.error = "Only .txt and .md files are supported";
+      } else {
+        try {
+          const body = new FormData();
+          body.append("file", file);
+          // No JSON Content-Type here: the browser sets the multipart boundary.
+          const response = await fetch(`/api/agents/${agent._id}/memory`, { method: "POST", body });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "Upload failed");
+          entry.chunks = result.chunks;
+        } catch (uploadError) {
+          entry.error = uploadError.message;
+        }
+      }
+      setUploads(current => [entry, ...current]);
+    }
+    setBusy(false);
+  }
+
+  async function search(event) {
+    event.preventDefault();
+    if (!question.trim()) return;
+    setError("");
+    try {
+      setResults(await request(
+        `/api/agents/${agent._id}/memory/search?q=${encodeURIComponent(question)}`
+      ));
+    } catch (searchError) {
+      setError(searchError.message);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="agent-modal" role="dialog" aria-modal="true" aria-labelledby="memory-title">
+        <div className="modal-heading">
+          <div>
+            <p className="eyebrow">AGENT MEMORY</p>
+            <h2 id="memory-title">{agent.name} files</h2>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">×</button>
+        </div>
+
+        <div className="agent-form">
+          <label
+            className={`dropzone ${dragging ? "dropzone-active" : ""}`}
+            onDragOver={event => { event.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={event => {
+              event.preventDefault();
+              setDragging(false);
+              uploadFiles(event.dataTransfer.files);
+            }}
+          >
+            <input
+              type="file"
+              multiple
+              accept=".txt,.md,text/plain,text/markdown"
+              disabled={busy}
+              onChange={event => {
+                uploadFiles(event.target.files);
+                event.target.value = "";
+              }}
+            />
+            <strong>{busy ? "Uploading…" : "Drop .txt or .md files here, or click to browse"}</strong>
+            <small>Files are chunked and stored in this agent's memory. Re-uploading a file replaces it.</small>
+          </label>
+
+          {uploads.length > 0 && (
+            <ul className="upload-list">
+              {uploads.map((upload, index) => (
+                <li key={index} className={upload.error ? "upload-error" : ""}>
+                  <span>{upload.name}</span>
+                  <small>{upload.error || `${upload.chunks} chunks stored`}</small>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <form className="memory-search" onSubmit={search}>
+            <input
+              value={question}
+              onChange={event => setQuestion(event.target.value)}
+              placeholder="Test memory: ask a question…"
+              aria-label="Search memory"
+            />
+            <button className="button" type="submit">Search</button>
+          </form>
+
+          {results && (results.length === 0
+            ? <p className="subtitle">No matching content.</p>
+            : (
+              <ul className="upload-list">
+                {results.map((hit, index) => (
+                  <li key={index}>
+                    <span>{hit.source} <small>· score {hit.score?.toFixed(2)}</small></span>
+                    <small className="hit-text">{hit.text}</small>
+                  </li>
+                ))}
+              </ul>
+            ))}
+
+          {error && <p className="inline-error" role="alert">{error}</p>}
+
+          <div className="form-actions">
+            <button className="button button-primary" type="button" onClick={onClose}>Done</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ChatModal({ agent, onClose }) {
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+
+  async function send(event) {
+    event.preventDefault();
+    const content = message.trim();
+    if (!content || sending) return;
+
+    const history = messages.map(({ role, content: text }) => ({ role, content: text }));
+    setMessages(current => [...current, { role: "user", content }]);
+    setMessage("");
+    setSending(true);
+    setError("");
+
+    try {
+      const result = await request(`/api/agents/${agent._id}/chat`, {
+        method: "POST",
+        body: JSON.stringify({ message: content, history })
+      });
+      setMessages(current => [...current, { role: "assistant", content: result.reply }]);
+    } catch (chatError) {
+      setError(chatError.message);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="agent-modal chat-modal" role="dialog" aria-modal="true" aria-labelledby="chat-title">
+        <div className="modal-heading">
+          <div>
+            <p className="eyebrow">AGENT CHAT</p>
+            <h2 id="chat-title">{agent.name}</h2>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">×</button>
+        </div>
+
+        <div className="chat-messages" aria-live="polite">
+          {messages.length === 0 && (
+            <p className="chat-empty">Ask a question. {agent.name} will use its saved memory when relevant.</p>
+          )}
+          {messages.map((item, index) => (
+            <article key={index} className={`chat-message chat-${item.role}`}>
+              <span>{item.role === "user" ? "You" : agent.name}</span>
+              <p>{item.content}</p>
+            </article>
+          ))}
+          {sending && <p className="chat-thinking">{agent.name} is thinking…</p>}
+        </div>
+
+        {error && <p className="inline-error" role="alert">{error}</p>}
+
+        <form className="chat-composer" onSubmit={send}>
+          <textarea
+            value={message}
+            onChange={event => setMessage(event.target.value)}
+            placeholder="Message this agent…"
+            aria-label="Message this agent"
+            rows="2"
+            disabled={sending}
+          />
+          <button className="button button-primary" type="submit" disabled={sending || !message.trim()}>
+            {sending ? "Sending…" : "Send"}
+          </button>
+        </form>
+      </section>
+    </div>
+  );
+}
+
 function App() {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -220,6 +424,8 @@ function App() {
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [memoryAgent, setMemoryAgent] = useState(null);
+  const [chatAgent, setChatAgent] = useState(null);
 
   async function loadAgents() {
     setError("");
@@ -397,8 +603,16 @@ function App() {
                           <div className="row-actions">
                             <button
                               className="button button-small"
+                              onClick={() => setChatAgent(agent)}
+                            >Chat</button>
+                            <button
+                              className="button button-small"
                               onClick={() => setEditing(agent)}
                             >Edit</button>
+                             <button
+                              className="button button-small"
+                              onClick={() => setMemoryAgent(agent)}
+                            >Files</button>
                             <button
                               className="button button-small button-danger"
                               onClick={() => deleteAgent(agent)}
@@ -425,6 +639,12 @@ function App() {
           }}
           onSave={saveAgent}
         />
+      )}
+      {memoryAgent && (
+        <MemoryModal agent={memoryAgent} onClose={() => setMemoryAgent(null)} />
+      )}
+      {chatAgent && (
+        <ChatModal agent={chatAgent} onClose={() => setChatAgent(null)} />
       )}
     </div>
   );
