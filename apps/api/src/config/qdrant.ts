@@ -1,6 +1,12 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 
 let client: QdrantClient | null = null;
+let initialization: Promise<void> | null = null;
+
+const PAYLOAD_INDEXES = [
+  { fieldName: "agentId", fieldSchema: "keyword" },
+  { fieldName: "source", fieldSchema: "keyword" }
+] as const;
 
 export function getQdrant() {
   if (client) return client;
@@ -40,7 +46,19 @@ export async function embed(text: string): Promise<number[]> {
   return data.embeddings[0];
 }
 
-export async function connectQdrant() {
+export function connectQdrant(): Promise<void> {
+  if (initialization) return initialization;
+
+  initialization = initializeQdrant().catch(error => {
+    console.error("Qdrant initialization failed", error);
+    initialization = null;
+    throw error;
+  });
+
+  return initialization;
+}
+
+async function initializeQdrant() {
   const qdrant = getQdrant();
   const size = Number(process.env.EMBEDDING_DIMENSIONS || 768);
 
@@ -51,6 +69,41 @@ export async function connectQdrant() {
       vectors: { size, distance: "Cosine" }
     });
     console.log(`Qdrant collection created: ${QDRANT_COLLECTION}`);
+  }
+
+  for (const { fieldName, fieldSchema } of PAYLOAD_INDEXES) {
+    const { payload_schema: payloadSchema } = await qdrant.getCollection(QDRANT_COLLECTION);
+    const existingIndex = payloadSchema[fieldName];
+
+    if (existingIndex) {
+      if (existingIndex.data_type !== fieldSchema) {
+        throw new Error(
+          `Qdrant payload index "${fieldName}" has type "${existingIndex.data_type}", expected "${fieldSchema}"`
+        );
+      }
+
+      console.log(`Qdrant payload index already exists: ${fieldName} (${fieldSchema})`);
+      continue;
+    }
+
+    try {
+      await qdrant.createPayloadIndex(QDRANT_COLLECTION, {
+        field_name: fieldName,
+        field_schema: fieldSchema,
+        wait: true
+      });
+      console.log(`Qdrant payload index created: ${fieldName} (${fieldSchema})`);
+    } catch (error) {
+      const { payload_schema: updatedPayloadSchema } = await qdrant.getCollection(QDRANT_COLLECTION);
+      const createdIndex = updatedPayloadSchema[fieldName];
+
+      if (createdIndex?.data_type === fieldSchema) {
+        console.log(`Qdrant payload index already exists: ${fieldName} (${fieldSchema})`);
+        continue;
+      }
+
+      throw error;
+    }
   }
 
   console.log("Qdrant connected successfully");

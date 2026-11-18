@@ -278,3 +278,26 @@ tbody tr:last-child td { border-bottom: 0; }
   .form-grid { grid-template-columns: 1fr; }
   .agent-modal { padding: 21px 18px; }
 }
+
+.dropzone { display: grid; gap: 6px; padding: 28px 16px; text-align: center; color: #586477; background: #fafafd; border: 1.5px dashed #c8ced8; border-radius: 8px; cursor: pointer; }
+.dropzone:hover, .dropzone-active { background: #f1efff; border-color: var(--accent); }
+.dropzone input { display: none; }
+.dropzone strong { font-size: 12px; }
+.dropzone small { color: #8a95a4; font-size: 10px; }
+.upload-list { display: grid; gap: 6px; max-height: 220px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.upload-list li { display: grid; gap: 3px; padding: 8px 10px; font-size: 11px; background: #fff; border: 1px solid var(--line); border-radius: 6px; }
+.upload-list small { color: #4a9c7d; }
+.upload-list .upload-error small { color: #b65b68; }
+.upload-list .hit-text { color: #778294; white-space: pre-wrap; }
+.memory-search { display: flex; gap: 8px; }
+.memory-search input { flex: 1; }
+.chat-modal { display: flex; flex-direction: column; height: min(680px, 90vh); }
+.chat-messages { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 180px; padding: 4px 2px 16px; overflow-y: auto; }
+.chat-empty, .chat-thinking { margin: auto; color: #8a95a4; font-size: 12px; text-align: center; }
+.chat-message { max-width: 88%; padding: 10px 12px; background: #f5f6f9; border-radius: 8px; }
+.chat-user { align-self: flex-end; color: #fff; background: var(--accent); }
+.chat-message > span { display: block; margin-bottom: 4px; font-size: 10px; font-weight: 700; opacity: .75; }
+.chat-message p { margin: 0; font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat-composer { display: flex; align-items: flex-end; gap: 9px; padding-top: 13px; border-top: 1px solid #edf0f3; }
+.chat-composer textarea { flex: 1; resize: vertical; padding: 9px 10px; color: #354054; background: #fff; border: 1px solid #dfe4ea; border-radius: 5px; outline: 0; font-size: 12px; }
+.chat-composer textarea:focus { border-color: #958be9; box-shadow: 0 0 0 3px rgb(106 91 231 / 10%); }
