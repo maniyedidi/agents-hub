@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import mongoose from "mongoose";
-import { AgentModel } from "../models/agent.model";
-import { ingestText, searchMemory } from "../services/memory";
+import { AgentModel } from "../agents/agent.model";
+import { ingestText, searchMemory } from "./memory.service";
 
 const ALLOWED_EXTENSIONS = [".txt", ".md"];
 

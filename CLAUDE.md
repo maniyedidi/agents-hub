@@ -11,24 +11,50 @@ Runtime prerequisites: MongoDB (`MONGODB_URI` is required — the server exits w
 
 `MONGODB_URI`, `PORT`, `OLLAMA_URL`, `WORKSPACE_ROOT` (default `./workspaces`), and sandbox defaults `DOCKER_IMAGE`, `DOCKER_MEMORY`, `DOCKER_CPUS`, `DOCKER_TIMEOUT` (ms). `LOCAL_MODEL` is now only a leftover constant in `agent.ts`; the model comes from the agent document.
 
+## Layout
+
+```
+apps/api/src/
+  server.ts            entry: connect Mongo/Qdrant, seed admin, listen
+  app.ts               buildApp(): jwt, multipart, auth hook, routes, static UI
+  config/              database.ts, qdrant.ts (client, embed(), index setup)
+  sandbox/             docker-manager.ts (hardened throwaway container)
+  modules/
+    auth/              auth.hook.ts (authenticate, requireAdmin), auth.routes.ts, auth.service.ts (scrypt, seedAdmin)
+    users/             user.model.ts, user.routes.ts (admin-only CRUD)
+    agents/            agent.model.ts, agent.routes.ts (CRUD + chat), agent.run.routes.ts (POST /api/agents/run), agent.runner.ts (Ollama tool loop)
+    memory/            memory.routes.ts, memory.service.ts (chunk/embed/search in Qdrant)
+    tools/             toolbox.ts (tool defs + dispatch), workspace.tool.ts (in-container files), mongo.tool.ts, mcp.client.ts
+apps/web/src/
+  main.jsx             entry only
+  App.jsx              auth gate (login vs agents page)
+  api/client.js        fetch wrapper + token storage
+  constants.js         tool/image allowlists (mirror the API) and emptyAgent()
+  pages/               LoginPage, AgentsPage
+  components/          AgentForm, MemoryModal, ChatModal, UsersModal
+  styles/index.css
+```
+
+Dependencies point downward: routes -> services/runner -> tools/config. Feature code lives in its `modules/<name>/` folder.
+
+## Auth (demo)
+
+All `/api/*` routes except `POST /api/auth/login` require `Authorization: Bearer <jwt>` (hook in [auth.hook.ts](apps/api/src/modules/auth/auth.hook.ts)). No self-registration: only admins create users (`POST /api/users`, plus list/PATCH/DELETE). The first admin is seeded from `ADMIN_EMAIL`/`ADMIN_PASSWORD` when the users collection is empty. `JWT_SECRET` is required at startup. Passwords use scrypt; tokens last 12h and the user is re-checked (active/role) on every request.
+
 ## Architecture
 
-Agents are **MongoDB documents** (mongoose, [agent.model.ts](apps/api/src/models/agent.model.ts)) holding `instructions` (the system prompt), `model.name`, `tools`, `maxSteps`, and `runtime` settings. A run executes one agent against one throwaway Docker container:
+Agents are **MongoDB documents** ([agent.model.ts](apps/api/src/modules/agents/agent.model.ts)) holding `instructions` (the system prompt), `model.name`, `tools`, `dbCollections`, `mcpServers`, `maxSteps`, and `runtime` settings.
 
-1. [server.ts](apps/api/src/server.ts) — `POST /api/agents/run` with `{name, task}` looks up the agent **by `name`** (not slug/id), creates a `DockerSandboxManager`, calls `runAgent(agent, task, sandbox)`, and always `destroy()`s the sandbox in `finally`. Also registers CRUD routes and static UI hosting.
-2. [routes/agent.routes.ts](apps/api/src/routes/agent.routes.ts) — CRUD under `/api/agents` (`:id` is a Mongo ObjectId), plus `POST /:id/chat`. Validates `tools` and `runtime.image` against hard-coded allowlists (`ALLOWED_TOOLS`, `ALLOWED_IMAGES`); PUT whitelists updatable fields.
-3. [agent.ts](apps/api/src/agent.ts) — `runAgent` loops up to `agent.maxSteps` calling Ollama `/api/chat` and executes tool calls. `chatWithAgent` retrieves relevant memory for each user message and sends it with the conversation to Ollama.
-4. [packages/tools/workspace.ts](packages/tools/workspace.ts) — `listFiles`/`readFile`/`writeFile` implemented by running `find`/`node -e` **inside the container**; paths are confined to `/workspace`.
-5. [sandbox/docker-manager.ts](sandbox/docker-manager.ts) — hardened container (no network, read-only rootfs, caps dropped, pid/memory/cpu limits, noexec `/tmp`) with host dir `WORKSPACE_ROOT/<agentId>/<executionId>` bind-mounted at `/workspace`. Currently uses env-var defaults, not the agent's `runtime` settings; `server.ts` hard-codes agentId `"coder"`.
-6. [config/qdrant.ts](apps/api/src/config/qdrant.ts) — Qdrant client, `embed()` (Ollama `/api/embed`) and `connectQdrant()`, which creates the collection and payload indexes on startup. `EMBEDDING_DIMENSIONS` must match the embedding model. [services/memory.ts](apps/api/src/services/memory.ts) chunks uploaded text, stores embeddings, and retrieves relevant chunks by agent.
-7. [apps/web](apps/web) — single-file React 19 UI ([main.jsx](apps/web/src/main.jsx)) for agent CRUD, per-agent chat with memory retrieval, and the per-agent "Files" upload/search modal (`MemoryModal`); mirrors the tool/image allowlists as constants.
+- **Run:** `POST /api/agents/run` ([agent.run.routes.ts](apps/api/src/modules/agents/agent.run.routes.ts)) looks up the agent **by `name`**, creates a `DockerSandboxManager`, calls `runAgent`, and always `destroy()`s the sandbox in `finally`. The sandbox uses env-var defaults, not the agent's `runtime`; agentId is hard-coded `"coder"`.
+- **Chat:** `POST /api/agents/:id/chat` retrieves memory for the message and runs the same tool loop without a sandbox (file tools are not offered).
+- **Tool loop:** [agent.runner.ts](apps/api/src/modules/agents/agent.runner.ts) calls Ollama `/api/chat` up to `maxSteps`, executing tool calls through the toolbox.
+- **Tools:** [toolbox.ts](apps/api/src/modules/tools/toolbox.ts) offers only the tools enabled on the agent: file tools (sandbox only), `search_memory`, `mongo_find` (read-only, per-agent `dbCollections` allowlist), and `mcp` (remote HTTP MCP servers).
+- **Sandbox:** no network, read-only rootfs, caps dropped, pid/memory/cpu limits, noexec `/tmp`; host dir `WORKSPACE_ROOT/<agentId>/<executionId>` bind-mounted at `/workspace`.
+- **Memory:** `EMBEDDING_DIMENSIONS` must match the embedding model.
 
-
-Adding a tool means touching: the `tools` schema array and `executeTool` switch in `agent.ts`, the implementation in `packages/tools`, `ALLOWED_TOOLS` in the routes, and `AVAILABLE_TOOLS` in `main.jsx`. Adding an allowed image means updating `ALLOWED_IMAGES` in the routes and `AVAILABLE_IMAGES` in `main.jsx`.
+Adding a tool means touching: the definition and dispatch in `modules/tools/toolbox.ts` (implementation in its own `*.tool.ts`), `ALLOWED_TOOLS` in `agent.routes.ts`, and `AVAILABLE_TOOLS` in `apps/web/src/constants.js`. Adding an allowed image means updating `ALLOWED_IMAGES` in `agent.routes.ts` and `AVAILABLE_IMAGES` in `constants.js`.
 
 ## Known rough edges
 
 - Imports are extensionless relative paths, relying on `tsx`.
-- `server.ts` imports `randomUUID` from `bullmq/dist/esm/utils` (internal path); `node:crypto` is the stable alternative.
-- In `/api/agents/run`, the agent lookup and 404 happen before the `try`, so a missing/invalid body or DB error is not handled by the route's error handling.
 - `bullmq`, `ioredis`, and `pg` (and `DATABASE_URL`) are unused.

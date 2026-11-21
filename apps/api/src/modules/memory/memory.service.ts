@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { embed, getQdrant, QDRANT_COLLECTION } from "../config/qdrant";
+import { embed, getQdrant, QDRANT_COLLECTION } from "../../config/qdrant";
 
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
