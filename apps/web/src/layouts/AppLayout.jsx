@@ -38,7 +38,7 @@ export function AppLayout({ user, onLogout }) {
     <div className="app-shell">
       <aside className="sidebar">
         <NavLink className="brand" to="/agents" aria-label="Agents Hub home">
-          <span className="brand-mark">A</span>
+          <img className="brand-mark" src="/favicon.svg" alt="" />
           <span>agents<span className="brand-light">hub</span></span>
         </NavLink>
         <div className="nav-section">WORKSPACE</div>

@@ -28,6 +28,7 @@ export function LoginPage({ onLogin }) {
   return (
     <main className="main-content">
       <section className="page-content" style={{ maxWidth: 380, margin: "10vh auto" }}>
+        <img src="/favicon.svg" alt="Agents Hub" width="44" height="44" style={{ marginBottom: 12 }} />
         <h1>Sign in</h1>
         <p className="subtitle">Accounts are created by an administrator.</p>
         <form className="agent-form" onSubmit={submit}>
