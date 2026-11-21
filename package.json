@@ -38,7 +38,8 @@
     "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router-dom": "^7.18.6"
+    "react-router-dom": "^7.18.6",
+    "unpdf": "^1.9.1"
   },
   "devDependencies": {
     "@types/dockerode": "^4.0.2",
