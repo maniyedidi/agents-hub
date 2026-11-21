@@ -2,6 +2,7 @@ import 'dotenv/config';
 
 import { searchMemory } from "../memory/memory.service";
 import { createToolbox } from "../tools/toolbox";
+import { toOllamaParams } from "./model-options";
 import type { DockerSandboxManager } from "../../sandbox/docker-manager";
 
 const OLLAMA_URL =
@@ -40,6 +41,7 @@ async function runLoop(
         for (let step = 0; step < maxSteps; step++) {
             const data = await ollamaChat({
                 model: agent.model.name,
+                ...toOllamaParams(agent.model?.options),
                 messages,
                 ...(toolbox.tools.length > 0 ? { tools: toolbox.tools } : {})
             });
