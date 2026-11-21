@@ -1,9 +1,21 @@
 import { FastifyInstance } from "fastify";
 import mongoose from "mongoose";
 import { AgentModel } from "../agents/agent.model";
+import { extractText } from "unpdf";
 import { ingestText, searchMemory } from "./memory.service";
 
-const ALLOWED_EXTENSIONS = [".txt", ".md"];
+const ALLOWED_EXTENSIONS = [".txt", ".md", ".pdf"];
+const SUPPORTED_MESSAGE = "Only .txt, .md and .pdf files are supported (images and scanned PDFs are not)";
+const MAX_TEXT_BYTES = 2 * 1024 * 1024;
+
+// PDFs need a text layer; scanned/image-only PDFs yield no text (no OCR).
+async function readFileText(name: string, buffer: Buffer): Promise<string> {
+  if (name.toLowerCase().endsWith(".pdf")) {
+    const { text } = await extractText(new Uint8Array(buffer), { mergePages: true });
+    return text;
+  }
+  return buffer.toString("utf8");
+}
 
 export async function memoryRoutes(app: FastifyInstance) {
   // Ingest text files into an agent's memory.
@@ -28,13 +40,21 @@ export async function memoryRoutes(app: FastifyInstance) {
         const buffer = await file.toBuffer();
 
         if (file.file.truncated) {
-          results.push({ source, error: "File is too large (2 MB max)" });
+          results.push({ source, error: "File is too large (10 MB max)" });
         } else if (!isSupported(source)) {
-          results.push({ source, error: "Only .txt and .md files are supported" });
+          results.push({ source, error: SUPPORTED_MESSAGE });
+        } else if (!source.toLowerCase().endsWith(".pdf") && buffer.length > MAX_TEXT_BYTES) {
+          results.push({ source, error: "Text files are limited to 2 MB" });
         } else {
-          const text = buffer.toString("utf8");
           try {
-            if (!text.trim()) throw new Error("File contains no text");
+            const text = await readFileText(source, buffer);
+            if (!text.trim()) {
+              throw new Error(
+                source.toLowerCase().endsWith(".pdf")
+                  ? "No text found in PDF (scanned/image PDFs are not supported)"
+                  : "File contains no text"
+              );
+            }
             results.push(await ingestText(id, source, text));
           } catch (error: any) {
             request.log.error(error);
@@ -52,7 +72,7 @@ export async function memoryRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: "File name and text are required" });
     }
     if (!isSupported(body.name)) {
-      return reply.code(400).send({ error: "Only .txt and .md files are supported" });
+      return reply.code(400).send({ error: SUPPORTED_MESSAGE });
     }
 
     try {
