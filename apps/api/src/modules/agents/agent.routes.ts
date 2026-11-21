@@ -2,6 +2,7 @@
 import { FastifyInstance } from "fastify";
 import mongoose from "mongoose";
 import { AgentModel } from "./agent.model";
+import { sanitizeModelOptions } from "./model-options";
 import { chatWithAgent } from "./agent.runner";
 
 const ALLOWED_TOOLS = [
@@ -125,6 +126,12 @@ export async function agentRoutes(app: FastifyInstance) {
         });
       }
 
+      if (body.model) {
+        const { options, error } = sanitizeModelOptions(body.model.options);
+        if (error) return reply.code(400).send({ error });
+        body.model = { ...body.model, options };
+      }
+
       const agent = await AgentModel.create({
         ...body,
         slug
@@ -208,6 +215,12 @@ export async function agentRoutes(app: FastifyInstance) {
       return reply.code(400).send({
         error: "Docker image not allowed"
       });
+    }
+
+    if (body.model) {
+      const { options, error } = sanitizeModelOptions(body.model.options);
+      if (error) return reply.code(400).send({ error });
+      body.model = { ...body.model, options };
     }
 
     // Prevent clients from changing internal MongoDB fields.

@@ -37,6 +37,18 @@ const AgentSchema = new Schema(
       name: {
         type: String,
         required: true
+      },
+
+      // Generation settings; see model-options.ts for ranges. Missing values fall back to defaults at run time.
+      options: {
+        temperature: { type: Number, default: 0.7 },
+        topP: { type: Number, default: 0.9 },
+        topK: { type: Number, default: 40 },
+        repeatPenalty: { type: Number, default: 1.1 },
+        numCtx: { type: Number, default: 4096 },
+        numPredict: { type: Number, default: 2048 },
+        seed: { type: Number, default: null },
+        think: { type: String, enum: ["auto", "on", "off"], default: "auto" }
       }
     },
 

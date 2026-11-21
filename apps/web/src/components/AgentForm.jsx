@@ -1,11 +1,20 @@
 import { useState } from "react";
-import { AVAILABLE_IMAGES, AVAILABLE_TOOLS, emptyAgent } from "../constants";
+import { AVAILABLE_IMAGES, AVAILABLE_TOOLS, DEFAULT_MODEL_OPTIONS, MODEL_OPTION_FIELDS, emptyAgent } from "../constants";
+
+function stripBlank(options = {}) {
+  return Object.fromEntries(Object.entries(options).filter(([, value]) => value !== null && value !== undefined));
+}
 
 export function AgentForm({ agent, onClose, onSave }) {
   const [values, setValues] = useState(() => agent ? {
     ...emptyAgent(),
     ...agent,
-    model: { ...emptyAgent().model, ...agent.model },
+    model: {
+      ...emptyAgent().model,
+      ...agent.model,
+      // Older agents have no (or partial) options: fill in the defaults.
+      options: { ...DEFAULT_MODEL_OPTIONS, ...stripBlank(agent.model?.options) }
+    },
     runtime: { ...emptyAgent().runtime, ...agent.runtime }
   } : emptyAgent());
   const [saving, setSaving] = useState(false);
@@ -13,6 +22,13 @@ export function AgentForm({ agent, onClose, onSave }) {
 
   function update(field, value) {
     setValues(current => ({ ...current, [field]: value }));
+  }
+
+  function updateModelOption(field, value) {
+    setValues(current => ({
+      ...current,
+      model: { ...current.model, options: { ...current.model.options, [field]: value } }
+    }));
   }
 
   function updateNested(section, field, value) {
@@ -94,6 +110,46 @@ export function AgentForm({ agent, onClose, onSave }) {
               placeholder="llama3.2"
             />
           </label>
+          <fieldset className="model-settings">
+            <legend>Model settings</legend>
+            <div className="model-settings-grid">
+              {MODEL_OPTION_FIELDS.map(field => (
+                <label key={field.key}>
+                  {field.label}
+                  <input
+                    type="number"
+                    step={field.step}
+                    min={field.min}
+                    max={field.max}
+                    value={values.model.options[field.key] ?? ""}
+                    placeholder={field.key === "seed" ? "random" : String(DEFAULT_MODEL_OPTIONS[field.key])}
+                    onChange={event => updateModelOption(field.key, event.target.value)}
+                  />
+                  <small>{field.hint}</small>
+                </label>
+              ))}
+              <label>
+                Thinking
+                <select
+                  value={values.model.options.think}
+                  onChange={event => updateModelOption("think", event.target.value)}
+                >
+                  <option value="auto">Auto (model default)</option>
+                  <option value="off">Off (faster)</option>
+                  <option value="on">On</option>
+                </select>
+                <small>Only for models that support thinking, e.g. qwen3</small>
+              </label>
+            </div>
+            <button
+              type="button"
+              className="button button-small"
+              onClick={() => updateNested("model", "options", { ...DEFAULT_MODEL_OPTIONS })}
+            >
+              Reset to defaults
+            </button>
+          </fieldset>
+
           <label>
             Instructions <span className="required">*</span>
             <textarea
