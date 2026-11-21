@@ -220,7 +220,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .modal-heading h2 { margin: 0; color: var(--ink); font: 700 20px Manrope, sans-serif; }
 .icon-button { width: 30px; height: 30px; color: #7e8897; background: transparent; border: 0; font-size: 24px; line-height: 1; }
 .agent-form { display: grid; gap: 15px; }
-.agent-form > label, .form-grid > label { display: grid; gap: 6px; color: #505b6d; font-size: 11px; font-weight: 600; }
+.agent-form > label, .form-grid > label, .mcp-url { display: grid; gap: 6px; color: #505b6d; font-size: 11px; font-weight: 600; }
 .required { color: #d66b75; }
 .agent-form input:not([type="checkbox"]), .agent-form textarea, .agent-form select {
   width: 100%;
@@ -238,6 +238,13 @@ tbody tr:last-child td { border-bottom: 0; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
 .agent-form fieldset { margin: 0; padding: 0; border: 0; }
 .agent-form legend { margin-bottom: 8px; color: #505b6d; font-size: 11px; font-weight: 600; }
+.mcp-section { display: grid; gap: 10px; }
+.mcp-card { display: grid; gap: 12px; padding: 12px; background: #fafbfc; border: 1px solid #e6eaef; border-radius: 8px; }
+.mcp-card-header { display: flex; align-items: center; justify-content: space-between; color: #505b6d; font-size: 11px; }
+.mcp-url { display: grid; gap: 6px; color: #505b6d; font-size: 11px; font-weight: 600; }
+.mcp-empty { margin: 0; color: #8b95a3; font-size: 11px; }
+.optional { color: #9aa3b0; font-weight: 500; }
+.mcp-section > .button { justify-self: start; }
 .tool-options { display: flex; flex-wrap: wrap; gap: 8px; }
 .check-label { display: inline-flex; align-items: center; gap: 7px; color: #657184; font-size: 11px; }
 .check-label input { accent-color: var(--accent); }
