@@ -57,14 +57,14 @@ export function UsersModal({ currentUser, onClose }) {
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="agent-modal" role="dialog" aria-modal="true" aria-labelledby="users-title">
+    <section className="page-content">
+      <section className="page-card" aria-labelledby="users-title">
         <div className="modal-heading">
           <div>
             <p className="eyebrow">ADMINISTRATION</p>
             <h2 id="users-title">Users</h2>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">×</button>
+          <button className="button" type="button" onClick={onClose}>← Back</button>
         </div>
 
         <form className="agent-form" onSubmit={register}>
@@ -117,6 +117,6 @@ export function UsersModal({ currentUser, onClose }) {
           </table>
         </div>
       </section>
-    </div>
+    </section>
   );
 }

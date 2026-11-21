@@ -43,9 +43,9 @@ export function AgentForm({ agent, onClose, onSave }) {
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
+    <section className="page-content">
       <section
-        className="agent-modal"
+        className="page-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="form-title"
@@ -55,9 +55,7 @@ export function AgentForm({ agent, onClose, onSave }) {
             <p className="eyebrow">{agent ? "UPDATE CONFIGURATION" : "NEW CONFIGURATION"}</p>
             <h2 id="form-title">{agent ? "Edit agent" : "Create an agent"}</h2>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <button className="button" type="button" onClick={onClose}>← Back</button>
         </div>
 
         <form className="agent-form" onSubmit={submit}>
@@ -225,6 +223,6 @@ export function AgentForm({ agent, onClose, onSave }) {
           </div>
         </form>
       </section>
-    </div>
+    </section>
   );
 }

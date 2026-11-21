@@ -27,10 +27,11 @@ apps/api/src/
     tools/             toolbox.ts (tool defs + dispatch), workspace.tool.ts (in-container files), mongo.tool.ts, mcp.client.ts
 apps/web/src/
   main.jsx             entry only
-  App.jsx              auth gate (login vs agents page)
+  App.jsx              router + auth gate (routes: /login, /agents, /agents/new, /agents/:id/edit|chat|files, /users)
   api/client.js        fetch wrapper + token storage
   constants.js         tool/image allowlists (mirror the API) and emptyAgent()
-  pages/               LoginPage, AgentsPage
+  layouts/             AppLayout (sidebar, topbar, loads agents)
+  pages/               LoginPage, AgentsListPage, AgentRoutes (new/edit/chat/files/users pages)
   components/          AgentForm, MemoryModal, ChatModal, UsersModal
   styles/index.css
 ```
@@ -46,6 +47,7 @@ All `/api/*` routes except `POST /api/auth/login` require `Authorization: Bearer
 Agents are **MongoDB documents** ([agent.model.ts](apps/api/src/modules/agents/agent.model.ts)) holding `instructions` (the system prompt), `model.name`, `tools`, `dbCollections`, `mcpServers`, `maxSteps`, and `runtime` settings.
 
 - **Run:** `POST /api/agents/run` ([agent.run.routes.ts](apps/api/src/modules/agents/agent.run.routes.ts)) looks up the agent **by `name`**, creates a `DockerSandboxManager`, calls `runAgent`, and always `destroy()`s the sandbox in `finally`. The sandbox uses env-var defaults, not the agent's `runtime`; agentId is hard-coded `"coder"`.
+- **Memory upload:** `POST /api/agents/:id/memory` accepts several multipart `file` parts (.txt/.md, 2 MB each, 20 max) and returns per-file results.
 - **Chat:** `POST /api/agents/:id/chat` retrieves memory for the message and runs the same tool loop without a sandbox (file tools are not offered).
 - **Tool loop:** [agent.runner.ts](apps/api/src/modules/agents/agent.runner.ts) calls Ollama `/api/chat` up to `maxSteps`, executing tool calls through the toolbox.
 - **Tools:** [toolbox.ts](apps/api/src/modules/tools/toolbox.ts) offers only the tools enabled on the agent: file tools (sandbox only), `search_memory`, `mongo_find` (read-only, per-agent `dbCollections` allowlist), and `mcp` (remote HTTP MCP servers).

@@ -15,25 +15,38 @@ export function MemoryModal({ agent, onClose }) {
     setBusy(true);
     setError("");
 
+    // Reject unsupported files locally; send the rest in a single request.
+    const entries = [];
+    const body = new FormData();
     for (const file of files) {
-      const entry = { name: file.name };
-      if (!/\.(txt|md)$/i.test(file.name)) {
-        entry.error = "Only .txt and .md files are supported";
+      if (/\.(txt|md)$/i.test(file.name)) {
+        body.append("file", file);
       } else {
-        try {
-          const body = new FormData();
-          body.append("file", file);
-          // No JSON Content-Type here: the browser sets the multipart boundary.
-          const response = await fetch(`/api/agents/${agent._id}/memory`, { method: "POST", body, headers: authHeaders() });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || "Upload failed");
-          entry.chunks = result.chunks;
-        } catch (uploadError) {
-          entry.error = uploadError.message;
+        entries.push({ name: file.name, error: "Only .txt and .md files are supported" });
+      }
+    }
+
+    if ([...body.keys()].length > 0) {
+      try {
+        // No JSON Content-Type here: the browser sets the multipart boundary.
+        const response = await fetch(`/api/agents/${agent._id}/memory`, {
+          method: "POST",
+          body,
+          headers: authHeaders()
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Upload failed");
+        for (const item of result.results) {
+          entries.push({ name: item.source, chunks: item.chunks, error: item.error });
+        }
+      } catch (uploadError) {
+        for (const file of body.getAll("file")) {
+          entries.push({ name: file.name, error: uploadError.message });
         }
       }
-      setUploads(current => [entry, ...current]);
     }
+
+    setUploads(current => [...entries, ...current]);
     setBusy(false);
   }
 
@@ -51,14 +64,14 @@ export function MemoryModal({ agent, onClose }) {
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="agent-modal" role="dialog" aria-modal="true" aria-labelledby="memory-title">
+    <section className="page-content">
+      <section className="page-card" aria-labelledby="memory-title">
         <div className="modal-heading">
           <div>
             <p className="eyebrow">AGENT MEMORY</p>
             <h2 id="memory-title">{agent.name} files</h2>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">×</button>
+          <button className="button" type="button" onClick={onClose}>← Back</button>
         </div>
 
         <div className="agent-form">
@@ -127,6 +140,6 @@ export function MemoryModal({ agent, onClose }) {
           </div>
         </div>
       </section>
-    </div>
+    </section>
   );
 }

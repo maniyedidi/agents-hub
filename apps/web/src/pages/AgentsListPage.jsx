@@ -1,35 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { request } from "../api/client";
-import { AgentForm } from "../components/AgentForm";
-import { MemoryModal } from "../components/MemoryModal";
-import { ChatModal } from "../components/ChatModal";
-import { UsersModal } from "../components/UsersModal";
 
-export function AgentsPage({ user, onLogout }) {
-  const [agents, setAgents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+export function AgentsListPage() {
+  const { agents, setAgents, loading, error, setError, reloadAgents: loadAgents } = useOutletContext();
   const [query, setQuery] = useState("");
-  const [editing, setEditing] = useState(null);
-  const [creating, setCreating] = useState(false);
-  const [memoryAgent, setMemoryAgent] = useState(null);
-  const [showUsers, setShowUsers] = useState(false);
-  const [chatAgent, setChatAgent] = useState(null);
-
-  async function loadAgents() {
-    setError("");
-    try {
-      setAgents(await request("/api/agents"));
-    } catch (loadError) {
-      setError(loadError.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadAgents();
-  }, []);
+  const navigate = useNavigate();
 
   const filteredAgents = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -39,17 +15,6 @@ export function AgentsPage({ user, onLogout }) {
         .some(value => value?.toLowerCase().includes(normalizedQuery))
     );
   }, [agents, query]);
-
-  async function saveAgent(values) {
-    const isEditing = Boolean(editing);
-    await request(isEditing ? `/api/agents/${editing._id}` : "/api/agents", {
-      method: isEditing ? "PUT" : "POST",
-      body: JSON.stringify(values)
-    });
-    setCreating(false);
-    setEditing(null);
-    await loadAgents();
-  }
 
   async function deleteAgent(agent) {
     if (!window.confirm(`Delete "${agent.name}"? This cannot be undone.`)) return;
@@ -65,35 +30,6 @@ export function AgentsPage({ user, onLogout }) {
   const enabledCount = agents.filter(agent => agent.enabled).length;
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <a className="brand" href="/" aria-label="Agents Hub home">
-          <span className="brand-mark">A</span>
-          <span>agents<span className="brand-light">hub</span></span>
-        </a>
-        <div className="nav-section">WORKSPACE</div>
-        <a className="nav-link active" href="#agents">
-          <span className="nav-icon">◈</span> Agents
-          <span className="nav-count">{agents.length}</span>
-        </a>
-        <div className="sidebar-footer">
-          <span className="connection-dot" />
-          API connected
-        </div>
-      </aside>
-
-      <main className="main-content" id="agents">
-        <header className="topbar">
-          <span className="breadcrumb">Workspace <span>/</span> Agents</span>
-          <div>
-            <span className="breadcrumb">{user.name} ({user.role})</span>{" "}
-            {user.role === "admin" && (
-              <button className="button" onClick={() => setShowUsers(true)}>Users</button>
-            )}{" "}
-            <button className="button" onClick={onLogout}>Sign out</button>
-          </div>
-        </header>
-
         <section className="page-content">
           <div className="page-heading">
             <div>
@@ -101,7 +37,7 @@ export function AgentsPage({ user, onLogout }) {
               <h1>Agents</h1>
               <p className="subtitle">Create and manage the agents available in your workspace.</p>
             </div>
-            <button className="button button-primary" onClick={() => setCreating(true)}>
+            <button className="button button-primary" onClick={() => navigate("/agents/new")}>
               <span className="plus">+</span> New agent
             </button>
           </div>
@@ -154,7 +90,7 @@ export function AgentsPage({ user, onLogout }) {
                   ? "Try a different search term."
                   : "Create your first agent to get started."}</p>
                 {!query && (
-                  <button className="button button-primary" onClick={() => setCreating(true)}>
+                  <button className="button button-primary" onClick={() => navigate("/agents/new")}>
                     Create an agent
                   </button>
                 )}
@@ -198,15 +134,15 @@ export function AgentsPage({ user, onLogout }) {
                           <div className="row-actions">
                             <button
                               className="button button-small"
-                              onClick={() => setChatAgent(agent)}
+                              onClick={() => navigate(`/agents/${agent._id}/chat`)}
                             >Chat</button>
                             <button
                               className="button button-small"
-                              onClick={() => setEditing(agent)}
+                              onClick={() => navigate(`/agents/${agent._id}/edit`)}
                             >Edit</button>
                              <button
                               className="button button-small"
-                              onClick={() => setMemoryAgent(agent)}
+                              onClick={() => navigate(`/agents/${agent._id}/files`)}
                             >Files</button>
                             <button
                               className="button button-small button-danger"
@@ -223,27 +159,5 @@ export function AgentsPage({ user, onLogout }) {
           </section>
           <footer className="page-footer">Agents Hub <span>·</span> Agent workspace</footer>
         </section>
-      </main>
-
-      {(creating || editing) && (
-        <AgentForm
-          agent={editing}
-          onClose={() => {
-            setCreating(false);
-            setEditing(null);
-          }}
-          onSave={saveAgent}
-        />
-      )}
-      {showUsers && (
-        <UsersModal currentUser={user} onClose={() => setShowUsers(false)} />
-      )}
-      {memoryAgent && (
-        <MemoryModal agent={memoryAgent} onClose={() => setMemoryAgent(null)} />
-      )}
-      {chatAgent && (
-        <ChatModal agent={chatAgent} onClose={() => setChatAgent(null)} />
-      )}
-    </div>
   );
 }

@@ -32,14 +32,14 @@ export function ChatModal({ agent, onClose }) {
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="agent-modal chat-modal" role="dialog" aria-modal="true" aria-labelledby="chat-title">
+    <section className="page-content">
+      <section className="page-card chat-modal" aria-labelledby="chat-title">
         <div className="modal-heading">
           <div>
             <p className="eyebrow">AGENT CHAT</p>
             <h2 id="chat-title">{agent.name}</h2>
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">×</button>
+          <button className="button" type="button" onClick={onClose}>← Back</button>
         </div>
 
         <div className="chat-messages" aria-live="polite">
@@ -71,6 +71,6 @@ export function ChatModal({ agent, onClose }) {
           </button>
         </form>
       </section>
-    </div>
+    </section>
   );
 }
