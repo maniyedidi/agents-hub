@@ -218,42 +218,63 @@ export function AgentForm({ agent, onClose, onSave }) {
           )}
 
           {values.tools.includes("mcp") && (
-            <fieldset>
+            <fieldset className="mcp-section">
               <legend>MCP servers (remote HTTP)</legend>
-              {(values.mcpServers || []).map((server, index) => (
-                <div className="form-grid" key={index}>
-                  <input
-                    placeholder="name"
-                    value={server.name}
-                    onChange={event => update("mcpServers", values.mcpServers.map((item, i) =>
-                      i === index ? { ...item, name: event.target.value } : item))}
-                  />
-                  <input
-                    placeholder="https://host/mcp"
-                    value={server.url}
-                    onChange={event => update("mcpServers", values.mcpServers.map((item, i) =>
-                      i === index ? { ...item, url: event.target.value } : item))}
-                  />
-                  <input
-                    type="password"
-                    placeholder="bearer token (optional)"
-                    value={server.authToken || ""}
-                    onChange={event => update("mcpServers", values.mcpServers.map((item, i) =>
-                      i === index ? { ...item, authToken: event.target.value } : item))}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => update("mcpServers", values.mcpServers.filter((_, i) => i !== index))}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
+              {(values.mcpServers || []).length === 0 && (
+                <p className="mcp-empty">No MCP servers yet. Add one to let this agent call its tools.</p>
+              )}
+              {(values.mcpServers || []).map((server, index) => {
+                const setField = (field, value) => update("mcpServers", values.mcpServers.map((item, i) =>
+                  i === index ? { ...item, [field]: value } : item));
+                return (
+                  <div className="mcp-card" key={index}>
+                    <div className="mcp-card-header">
+                      <strong>Server {index + 1}</strong>
+                      <button
+                        type="button"
+                        className="button button-small button-danger"
+                        onClick={() => update("mcpServers", values.mcpServers.filter((_, i) => i !== index))}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="form-grid">
+                      <label>
+                        Name
+                        <input
+                          placeholder="docs"
+                          value={server.name}
+                          onChange={event => setField("name", event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Bearer token <span className="optional">(optional)</span>
+                        <input
+                          type="password"
+                          autoComplete="off"
+                          placeholder="••••••••"
+                          value={server.authToken || ""}
+                          onChange={event => setField("authToken", event.target.value)}
+                        />
+                      </label>
+                    </div>
+                    <label className="mcp-url">
+                      URL
+                      <input
+                        placeholder="https://host/mcp"
+                        value={server.url}
+                        onChange={event => setField("url", event.target.value)}
+                      />
+                    </label>
+                  </div>
+                );
+              })}
               <button
                 type="button"
+                className="button button-small"
                 onClick={() => update("mcpServers", [...(values.mcpServers || []), { name: "", url: "", authToken: "" }])}
               >
-                Add MCP server
+                + Add MCP server
               </button>
             </fieldset>
           )}
