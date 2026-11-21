@@ -44,11 +44,7 @@ button { cursor: pointer; }
   width: 31px;
   height: 31px;
   place-items: center;
-  color: #fff;
-  background: var(--accent);
   border-radius: 9px;
-  font-size: 15px;
-  letter-spacing: 0;
 }
 .brand-light { color: #8992a1; font-weight: 600; }
 .nav-section, .eyebrow {
