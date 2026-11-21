@@ -119,24 +119,26 @@ export function AgentForm({ agent, onClose, onSave }) {
         <form className="agent-form" noValidate onSubmit={submit}>
           {tab === "basic" && (
             <div className="tab-panel" role="tabpanel" id="panel-basic" aria-labelledby="tab-basic">
-              <label>
-                <span>Name <span className="required">*</span></span>
-                <input
-                  autoFocus
-                  required
-                  value={values.name}
-                  onChange={event => update("name", event.target.value)}
-                  placeholder="Code assistant"
-                />
-              </label>
-              <label>
-                Slug
-                <input
-                  value={values.slug}
-                  onChange={event => update("slug", event.target.value)}
-                  placeholder="Generated from name if left blank"
-                />
-              </label>
+              <div className="form-grid">
+                <label>
+                  <span>Name <span className="required">*</span></span>
+                  <input
+                    autoFocus
+                    required
+                    value={values.name}
+                    onChange={event => update("name", event.target.value)}
+                    placeholder="Code assistant"
+                  />
+                </label>
+                <label>
+                  Slug
+                  <input
+                    value={values.slug}
+                    onChange={event => update("slug", event.target.value)}
+                    placeholder="Auto-generated if blank"
+                  />
+                </label>
+              </div>
               <label>
                 Description
                 <input
@@ -149,7 +151,7 @@ export function AgentForm({ agent, onClose, onSave }) {
                 <span>Instructions <span className="required">*</span></span>
                 <textarea
                   required
-                  rows="5"
+                  rows="14"
                   value={values.instructions}
                   onChange={event => update("instructions", event.target.value)}
                   placeholder="Describe how the agent should work"
