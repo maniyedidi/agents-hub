@@ -20,7 +20,7 @@ export async function buildApp() {
   const app = Fastify({ logger: true });
 
   await app.register(fastifyJwt, { secret: process.env.JWT_SECRET });
-  await app.register(multipart, { limits: { fileSize: 2 * 1024 * 1024, files: 20 } });
+  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 20 } });
   app.addHook("onRequest", authenticate);
 
   app.get("/health", async () => ({ status: "ok", service: "agents-hub" }));

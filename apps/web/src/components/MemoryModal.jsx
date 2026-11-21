@@ -19,10 +19,10 @@ export function MemoryModal({ agent, onClose }) {
     const entries = [];
     const body = new FormData();
     for (const file of files) {
-      if (/\.(txt|md)$/i.test(file.name)) {
+      if (/\.(txt|md|pdf)$/i.test(file.name)) {
         body.append("file", file);
       } else {
-        entries.push({ name: file.name, error: "Only .txt and .md files are supported" });
+        entries.push({ name: file.name, error: "Only .txt, .md and .pdf files are supported" });
       }
     }
 
@@ -88,15 +88,15 @@ export function MemoryModal({ agent, onClose }) {
             <input
               type="file"
               multiple
-              accept=".txt,.md,text/plain,text/markdown"
+              accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf"
               disabled={busy}
               onChange={event => {
                 uploadFiles(event.target.files);
                 event.target.value = "";
               }}
             />
-            <strong>{busy ? "Uploading…" : "Drop .txt or .md files here, or click to browse"}</strong>
-            <small>Files are chunked and stored in this agent's memory. Re-uploading a file replaces it.</small>
+            <strong>{busy ? "Uploading…" : "Drop .txt, .md or .pdf files here, or click to browse"}</strong>
+            <small>Files are chunked and stored in this agent's memory. Re-uploading a file replaces it. Images and scanned (image-only) PDFs are not supported.</small>
           </label>
 
           {uploads.length > 0 && (
