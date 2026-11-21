@@ -1,0 +1,50 @@
+NIMBUS CLOUD - EMPLOYEE HANDBOOK (SAMPLE, FICTIONAL)
+Version 3.2 - Effective 1 January 2026
+
+1. ABOUT NIMBUS CLOUD
+Nimbus Cloud was founded in 2014 by Priya Raman and Daniel Ortiz in Pune, India.
+The company builds backup and storage software for small businesses.
+Headquarters: 14 Lakeview Road, Pune. Second office: Austin, Texas.
+Nimbus has 240 employees. The CEO is Priya Raman. The CTO is Daniel Ortiz.
+
+2. WORKING HOURS AND REMOTE WORK
+Core working hours are 10:00 to 16:00 local time, Monday to Friday.
+Employees may work remotely up to 3 days per week.
+Fully remote work needs written approval from a department head.
+Office days are Tuesday and Thursday for the Pune team.
+
+3. LEAVE POLICY
+Annual leave: 24 paid days per year. Up to 8 unused days can be carried over.
+Sick leave: 12 paid days per year. A medical certificate is required after 3 consecutive days.
+Parental leave: 26 weeks for the primary caregiver and 6 weeks for the other parent.
+Public holidays follow the local office calendar.
+Leave requests must be submitted in the HR portal at least 5 working days in advance.
+
+4. EXPENSES AND TRAVEL
+Meals while travelling: up to 1,500 INR (or 25 USD) per day.
+Flights must be booked at least 14 days ahead in economy class.
+Hotel limit: 9,000 INR (or 130 USD) per night.
+Expense claims must be filed within 30 days with receipts attached.
+Claims above 50,000 INR need approval from the Finance Director, Meera Joshi.
+
+5. SECURITY RULES
+Passwords must have at least 14 characters and be changed every 180 days.
+Two-factor authentication is mandatory for all company accounts.
+Lost laptops must be reported to security@nimbus.example within 2 hours.
+Customer data must never be copied to personal devices or personal cloud storage.
+
+6. SUPPORT AND ESCALATION
+Severity 1 incidents (service down): respond within 15 minutes, 24x7.
+Severity 2 incidents (major feature broken): respond within 2 hours.
+Severity 3 incidents (minor issue): respond within 1 business day.
+The on-call engineer rotation changes every Monday at 09:00.
+The incident commander for Severity 1 is always the engineering manager on duty.
+
+7. LEARNING BUDGET
+Each employee gets 60,000 INR per year for courses, books and conferences.
+Unused budget does not carry over. Manager approval is required above 20,000 INR.
+
+8. CONTACTS
+HR: hr@nimbus.example, extension 210.
+IT helpdesk: it@nimbus.example, extension 305.
+Finance: finance@nimbus.example, extension 120.
