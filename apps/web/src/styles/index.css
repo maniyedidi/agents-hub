@@ -220,7 +220,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .modal-heading h2 { margin: 0; color: var(--ink); font: 700 20px Manrope, sans-serif; }
 .icon-button { width: 30px; height: 30px; color: #7e8897; background: transparent; border: 0; font-size: 24px; line-height: 1; }
 .agent-form { display: grid; gap: 15px; }
-.agent-form > label, .form-grid > label, .mcp-url { display: grid; gap: 6px; color: #505b6d; font-size: 11px; font-weight: 600; }
+.agent-form > label, .tab-panel > label, .form-grid > label, .mcp-url { display: grid; gap: 6px; color: #505b6d; font-size: 11px; font-weight: 600; }
 .required { color: #d66b75; }
 .agent-form input:not([type="checkbox"]), .agent-form textarea, .agent-form select {
   width: 100%;
@@ -263,7 +263,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .check-label input { accent-color: var(--accent); }
 .tool-options .check-label { padding: 6px 8px; background: #f7f8fa; border: 1px solid #e9edf1; border-radius: 5px; }
 .tool-options code { font-size: 10px; }
-.enabled-option { width: fit-content; }
+.agent-form .check-label.enabled-option { display: inline-flex; width: fit-content; }
 .inline-error { margin: 0; padding: 9px 10px; color: #a13e4b; background: #fff5f5; border-radius: 5px; font-size: 11px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 5px; padding-top: 15px; border-top: 1px solid #edf0f3; }
 
