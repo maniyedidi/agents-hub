@@ -2,7 +2,7 @@
 
 - `npm run dev` — API server via `tsx apps/api/src/server.ts` (port `PORT`, default 3000).
 - `npm run dev:web` — Vite dev server for the React UI on `http://localhost:5173` (proxies `/api` to `localhost:3000`).
-- `npm run build:web` — builds the UI into `apps/api/public/` (committed to git; `emptyOutDir` wipes it). The API serves that directory statically if it exists.
+- `npm run build:web` — builds the UI into `apps/api/public/` (git-ignored, so PRs no longer conflict on hashed bundle files; `emptyOutDir` wipes it). The API serves that directory statically if it exists. `npm start` builds the UI and then starts the API; deployments must run a build step.
 - `npm test` is a placeholder; there is no test framework, linter, or `tsconfig.json`. TS runs directly through `tsx`.
 
 Runtime prerequisites: MongoDB (`MONGODB_URI` is required — the server exits without it), Qdrant Cloud (`QDRANT_URL`/`QDRANT_API_KEY`, also required at startup), a Docker daemon, and an Ollama server. Copy `.env.example` to `.env`.

@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx apps/api/src/server.ts",
+    "start": "npm run build:web && tsx apps/api/src/server.ts",
     "dev:web": "vite --config apps/web/vite.config.js",
     "local": "sh -c 'trap \"kill 0\" EXIT INT TERM; npm run dev & npm run dev:web & wait'",
     "build:web": "vite build --config apps/web/vite.config.js"

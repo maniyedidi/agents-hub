@@ -22,6 +22,7 @@ Key variables: `MONGODB_URI` (required), `QDRANT_URL` and `QDRANT_API_KEY` (requ
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Start the API on `http://localhost:3000` |
+| `npm run dev` | Start the API on `http://localhost:3000` (serves the UI only if it has been built) |
+| `npm start` | Build the UI, then start the API on `http://localhost:3000` serving it |
 | `npm run dev:web` | Start the UI dev server on `http://localhost:5173` (proxies `/api` to the API) |
-| `npm run build:web` | Build the UI into `apps/api/public`, served by the API at `http://localhost:3000` |
+| `npm run build:web` | Build the UI into `apps/api/public` (git-ignored), served by the API at `http://localhost:3000` |

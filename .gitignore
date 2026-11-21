@@ -49,3 +49,5 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+# Built UI (generate with `npm run build:web`)
+apps/api/public/
