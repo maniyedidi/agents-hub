@@ -72,6 +72,19 @@ const AgentSchema = new Schema(
       type: String
     }],
 
+    // Collections the agent may read with the mongo_find tool.
+    dbCollections: [{
+      type: String
+    }],
+
+    // Remote (HTTP) MCP servers, used when the "mcp" tool is enabled.
+    mcpServers: [{
+      _id: false,
+      name: { type: String, required: true },
+      url: { type: String, required: true },
+      authToken: { type: String, select: false }
+    }],
+
     maxSteps: {
       type: Number,
       default: 10

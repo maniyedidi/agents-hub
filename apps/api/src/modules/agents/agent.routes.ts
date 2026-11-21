@@ -1,20 +1,35 @@
 
 import { FastifyInstance } from "fastify";
 import mongoose from "mongoose";
-import { AgentModel } from "../models/agent.model";
-import { chatWithAgent } from "../agent";
+import { AgentModel } from "./agent.model";
+import { chatWithAgent } from "./agent.runner";
 
 const ALLOWED_TOOLS = [
   "list_files",
   "read_file",
   "write_file",
-  "search_memory"
+  "search_memory",
+  "mongo_find",
+  "mcp"
 ];
 
 const ALLOWED_IMAGES = [
   "node:22-alpine",
   "python:3.12-slim"
 ];
+
+function invalidMcpServers(servers: any) {
+  if (servers === undefined) return false;
+  return !Array.isArray(servers) || !servers.every((s: any) => {
+    try {
+      const url = new URL(s?.url);
+      return typeof s?.name === "string" && s.name.trim() &&
+        (url.protocol === "https:" || url.protocol === "http:");
+    } catch {
+      return false;
+    }
+  });
+}
 
 export async function agentRoutes(app: FastifyInstance) {
 
@@ -47,7 +62,9 @@ export async function agentRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: "Invalid chat history" });
     }
 
-    const agent = await AgentModel.findById(id).lean();
+    const agent = await AgentModel.findById(id)
+      .select("+mcpServers.authToken")
+      .lean();
     if (!agent) {
       return reply.code(404).send({ error: "Agent not found" });
     }
@@ -93,6 +110,10 @@ export async function agentRoutes(app: FastifyInstance) {
         return reply.code(400).send({
           error: "Invalid tool selection"
         });
+      }
+
+      if (invalidMcpServers(body.mcpServers)) {
+        return reply.code(400).send({ error: "Invalid MCP servers" });
       }
 
       if (
@@ -176,6 +197,10 @@ export async function agentRoutes(app: FastifyInstance) {
       });
     }
 
+    if (invalidMcpServers(body.mcpServers)) {
+      return reply.code(400).send({ error: "Invalid MCP servers" });
+    }
+
     if (
       body.runtime?.image &&
       !ALLOWED_IMAGES.includes(body.runtime.image)
@@ -194,6 +219,8 @@ export async function agentRoutes(app: FastifyInstance) {
       "model",
       "runtime",
       "tools",
+      "dbCollections",
+      "mcpServers",
       "maxSteps",
       "enabled"
     ];
@@ -203,6 +230,20 @@ export async function agentRoutes(app: FastifyInstance) {
         allowedFields.includes(key)
       )
     );
+
+    // The UI never receives stored tokens, so keep the existing one when left blank.
+    if (Array.isArray((update as any).mcpServers)) {
+      const existing = await AgentModel.findById(id)
+        .select("+mcpServers.authToken")
+        .lean();
+      for (const server of (update as any).mcpServers) {
+        if (!server.authToken) {
+          const previous = existing?.mcpServers?.find((s: any) => s.name === server.name);
+          if (previous?.authToken) server.authToken = previous.authToken;
+          else delete server.authToken;
+        }
+      }
+    }
 
     const agent = await AgentModel.findByIdAndUpdate(
       id,
