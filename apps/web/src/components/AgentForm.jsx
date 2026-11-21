@@ -76,7 +76,7 @@ export function AgentForm({ agent, onClose, onSave }) {
 
         <form className="agent-form" onSubmit={submit}>
           <label>
-            Name <span className="required">*</span>
+            <span>Name <span className="required">*</span></span>
             <input
               autoFocus
               required
@@ -102,7 +102,7 @@ export function AgentForm({ agent, onClose, onSave }) {
             />
           </label>
           <label>
-            Model name <span className="required">*</span>
+            <span>Model name <span className="required">*</span></span>
             <input
               required
               value={values.model.name}
@@ -151,7 +151,7 @@ export function AgentForm({ agent, onClose, onSave }) {
           </fieldset>
 
           <label>
-            Instructions <span className="required">*</span>
+            <span>Instructions <span className="required">*</span></span>
             <textarea
               required
               rows="5"
@@ -248,7 +248,7 @@ export function AgentForm({ agent, onClose, onSave }) {
                         />
                       </label>
                       <label>
-                        Bearer token <span className="optional">(optional)</span>
+                        <span>Bearer token <span className="optional">(optional)</span></span>
                         <input
                           type="password"
                           autoComplete="off"
